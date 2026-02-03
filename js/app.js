@@ -182,11 +182,18 @@ class CyberBodhisattva {
             return;
         }
 
+        const notes = Math.floor(money / 2);
         this.showGeneratingAnimation();
 
         setTimeout(() => {
-            const numbers = this.generateLotteryNumbers();
-            this.displayResult(numbers);
+            // 生成多组号码
+            const allNumbers = [];
+            for (let i = 0; i < notes; i++) {
+                const numbers = this.generateLotteryNumbers();
+                numbers.index = i + 1; // 添加序号
+                allNumbers.push(numbers);
+            }
+            this.displayMultiResults(allNumbers, notes);
             this.hideGeneratingAnimation();
         }, 2500);
     }
@@ -251,49 +258,116 @@ class CyberBodhisattva {
         return numbers;
     }
 
-    // 显示结果
-    displayResult(numbers) {
+    // 显示多组结果
+    displayMultiResults(allNumbers, totalNotes) {
         const panel = document.getElementById('resultPanel');
         const container = document.getElementById('ballsContainer');
+        const subtitle = document.getElementById('resultSubtitle');
         
         panel.classList.add('show');
         container.innerHTML = '';
+        subtitle.textContent = `🎲 共生成 ${totalNotes} 组号码，祝您好运！`;
         
-        // 添加前区/红球
-        numbers.front.forEach((num, index) => {
-            const ball = document.createElement('div');
-            ball.className = `ball ${numbers.type === 'ssq' ? 'red' : 'front'}`;
-            ball.textContent = num.toString().padStart(2, '0');
-            ball.style.animationDelay = `${index * 0.1}s`;
-            container.appendChild(ball);
-        });
+        // 显示标题
+        const title = document.createElement('div');
+        title.style.cssText = 'font-size: 16px; color: #00d9ff; margin-bottom: 20px; font-family: "Orbitron", sans-serif;';
+        title.textContent = totalNotes > 1 ? `💰 ${totalNotes * 2}元 = ${totalNotes}注号码` : '单注号码';
+        container.appendChild(title);
         
-        // 加号
-        const plus = document.createElement('div');
-        plus.className = 'plus-sign';
-        plus.textContent = '+';
-        container.appendChild(plus);
+        // 限制显示数量，太多会卡
+        const displayCount = Math.min(allNumbers.length, 10);
         
-        // 后区/蓝球
-        numbers.back.forEach((num, index) => {
-            const ball = document.createElement('div');
-            ball.className = `ball ${numbers.type === 'ssq' ? 'blue' : 'back'}`;
-            ball.textContent = num.toString().padStart(2, '0');
-            ball.style.animationDelay = `${(numbers.front.length + index + 1) * 0.1}s`;
-            container.appendChild(ball);
-        });
+        for (let i = 0; i < displayCount; i++) {
+            const numbers = allNumbers[i];
+            
+            // 每组号码的容器
+            const groupDiv = document.createElement('div');
+            groupDiv.style.cssText = `
+                display: flex;
+                align-items: center;
+                gap: 10px;
+                margin-bottom: 15px;
+                padding: 15px;
+                background: rgba(0,0,0,0.3);
+                border-radius: 10px;
+                flex-wrap: wrap;
+                justify-content: center;
+            `;
+            
+            // 序号标签
+            const indexLabel = document.createElement('div');
+            indexLabel.style.cssText = `
+                background: linear-gradient(135deg, #ffd700, #ff8c00);
+                color: #1a0033;
+                padding: 5px 12px;
+                border-radius: 20px;
+                font-size: 12px;
+                font-weight: bold;
+                margin-right: 5px;
+            `;
+            indexLabel.textContent = `第${numbers.index}注`;
+            groupDiv.appendChild(indexLabel);
+            
+            // 前区/红球
+            numbers.front.forEach((num, idx) => {
+                const ball = document.createElement('div');
+                ball.className = `ball ${numbers.type === 'ssq' ? 'red' : 'front'}`;
+                ball.style.cssText = `
+                    width: 45px;
+                    height: 45px;
+                    font-size: 16px;
+                    animation-delay: ${(i * 0.2 + idx * 0.05)}s;
+                `;
+                ball.textContent = num.toString().padStart(2, '0');
+                groupDiv.appendChild(ball);
+            });
+            
+            // 加号
+            const plus = document.createElement('div');
+            plus.className = 'plus-sign';
+            plus.style.cssText = 'font-size: 20px; margin: 0 5px;';
+            plus.textContent = '+';
+            groupDiv.appendChild(plus);
+            
+            // 后区/蓝球
+            numbers.back.forEach((num, idx) => {
+                const ball = document.createElement('div');
+                ball.className = `ball ${numbers.type === 'ssq' ? 'blue' : 'back'}`;
+                ball.style.cssText = `
+                    width: 45px;
+                    height: 45px;
+                    font-size: 16px;
+                    animation-delay: ${(i * 0.2 + (numbers.front.length + idx + 1) * 0.05)}s;
+                `;
+                ball.textContent = num.toString().padStart(2, '0');
+                groupDiv.appendChild(ball);
+            });
+            
+            container.appendChild(groupDiv);
+        }
+        
+        // 如果还有更多
+        if (allNumbers.length > 10) {
+            const moreDiv = document.createElement('div');
+            moreDiv.style.cssText = 'color: #b829dd; font-size: 14px; margin-top: 10px;';
+            moreDiv.textContent = `...还有 ${allNumbers.length - 10} 组号码已保存到历史记录`;
+            container.appendChild(moreDiv);
+        }
 
         // 菩萨开示
         const blessing = this.blessings[Math.floor(Math.random() * this.blessings.length)];
         document.getElementById('blessingBox').textContent = blessing;
 
-        // 财运评级
-        const starCount = Math.floor(Math.random() * 3) + 3;
+        // 财运评级 - 根据注数评级
+        const baseStars = Math.min(Math.floor(totalNotes / 5) + 3, 5);
+        const starCount = Math.max(baseStars, 3);
         document.getElementById('fortuneStars').textContent = 
             '★'.repeat(starCount) + '☆'.repeat(5 - starCount);
 
-        this.currentResult = numbers;
-        this.saveToHistory(numbers);
+        this.currentResults = allNumbers;
+        
+        // 保存所有到历史
+        allNumbers.forEach(numbers => this.saveToHistory(numbers));
         
         // 滚动到结果
         setTimeout(() => {
@@ -301,15 +375,30 @@ class CyberBodhisattva {
         }, 500);
     }
 
+    // 显示单组结果（保留旧方法兼容）
+    displayResult(numbers) {
+        this.displayMultiResults([numbers], 1);
+    }
+
     // 复制号码
     copyNumbers() {
-        if (!this.currentResult) return;
+        if (!this.currentResults || this.currentResults.length === 0) {
+            this.showToast('请先生成号码 🎲', 'warning');
+            return;
+        }
         
-        const { typeName, front, back } = this.currentResult;
-        const text = `${typeName}: ${front.map(n => n.toString().padStart(2, '0')).join(' ')} + ${back.map(n => n.toString().padStart(2, '0')).join(' ')}`;
+        const typeName = this.currentResults[0].typeName;
+        let text = `☸️ 赛博菩萨赐号 - ${typeName}\n`;
+        text += `共${this.currentResults.length}组号码\n\n`;
+        
+        this.currentResults.forEach((numbers, idx) => {
+            text += `第${idx + 1}注: ${numbers.front.map(n => n.toString().padStart(2, '0')).join(' ')} + ${numbers.back.map(n => n.toString().padStart(2, '0')).join(' ')}\n`;
+        });
+        
+        text += '\n🙏 佛光普照，号码天成';
         
         navigator.clipboard.writeText(text).then(() => {
-            this.showToast('号码已复制到剪贴板 📋', 'success');
+            this.showToast(`${this.currentResults.length}组号码已复制到剪贴板 📋`, 'success');
         }).catch(() => {
             const textarea = document.createElement('textarea');
             textarea.value = text;
@@ -317,16 +406,32 @@ class CyberBodhisattva {
             textarea.select();
             document.execCommand('copy');
             document.body.removeChild(textarea);
-            this.showToast('号码已复制到剪贴板 📋', 'success');
+            this.showToast(`${this.currentResults.length}组号码已复制到剪贴板 📋`, 'success');
         });
     }
 
     // 分享号码
     shareNumbers() {
-        if (!this.currentResult) return;
+        if (!this.currentResults || this.currentResults.length === 0) {
+            this.showToast('请先生成号码 🎲', 'warning');
+            return;
+        }
         
-        const { typeName, front, back } = this.currentResult;
-        const text = `🎯 赛博菩萨赐号\n${typeName}: ${front.join(' ')} + ${back.join(' ')}\n🙏 佛光普照，号码天成`;
+        const typeName = this.currentResults[0].typeName;
+        let text = `🎯 赛博菩萨赐号\n${typeName} 共${this.currentResults.length}组\n\n`;
+        
+        // 只分享前5组，太多会太长
+        const shareCount = Math.min(this.currentResults.length, 5);
+        for (let i = 0; i < shareCount; i++) {
+            const numbers = this.currentResults[i];
+            text += `第${i + 1}注: ${numbers.front.join(' ')} + ${numbers.back.join(' ')}\n`;
+        }
+        
+        if (this.currentResults.length > 5) {
+            text += `...还有${this.currentResults.length - 5}组\n`;
+        }
+        
+        text += '\n🙏 佛光普照，号码天成';
         
         if (navigator.share) {
             navigator.share({
@@ -342,11 +447,11 @@ class CyberBodhisattva {
 
     // 保存当前记录
     saveCurrentRecord() {
-        if (!this.currentResult) {
+        if (!this.currentResults || this.currentResults.length === 0) {
             this.showToast('请先生成号码 🎲', 'warning');
             return;
         }
-        this.showToast('号码已保存到历史记录 💾', 'success');
+        this.showToast(`${this.currentResults.length}组号码已保存到历史记录 💾`, 'success');
     }
 
     // 保存到历史

@@ -409,18 +409,49 @@
         .result-title {
             font-size: 24px;
             color: var(--primary-gold);
-            margin-bottom: 30px;
+            margin-bottom: 10px;
             text-shadow: 0 0 20px rgba(255, 215, 0, 0.5);
+        }
+
+        .result-subtitle {
+            font-size: 14px;
+            color: var(--neon-blue);
+            margin-bottom: 20px;
+            font-family: 'Orbitron', sans-serif;
         }
 
         /* 3D立体号码球 */
         .balls-container {
             display: flex;
-            justify-content: center;
+            flex-direction: column;
             align-items: center;
             gap: 15px;
-            flex-wrap: wrap;
             margin: 30px 0;
+        }
+
+        .number-group {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 15px 20px;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 15px;
+            flex-wrap: wrap;
+            justify-content: center;
+            width: 100%;
+            max-width: 600px;
+            border: 1px solid rgba(255, 215, 0, 0.2);
+        }
+
+        .group-label {
+            background: linear-gradient(135deg, #ffd700, #ff8c00);
+            color: #1a0033;
+            padding: 8px 15px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: bold;
+            margin-right: 10px;
+            white-space: nowrap;
         }
 
         .ball {
@@ -829,6 +860,7 @@
             <!-- 结果面板 -->
             <div class="result-panel" id="resultPanel">
                 <div class="result-title">🎯 今日天赐号码</div>
+                <div class="result-subtitle" id="resultSubtitle"></div>
                 <div class="balls-container" id="ballsContainer"></div>
                 
                 <div class="blessing-box" id="blessingBox"></div>
