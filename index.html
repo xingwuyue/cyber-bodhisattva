@@ -316,11 +316,177 @@
             font-size: 24px;
         }
 
-        /* 生成按钮 - 发光脉冲 */
-        .generate-btn {
-            width: 100%;
-            padding: 30px;
+        /* 掷圣杯容器 */
+        .sacred-cup-container {
             margin: 40px 0;
+            padding: 30px;
+            background: rgba(0, 0, 0, 0.3);
+            border: 2px solid rgba(255, 215, 0, 0.3);
+            border-radius: 20px;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .sacred-cup-container::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(255, 215, 0, 0.1) 0%, transparent 70%);
+            opacity: 0;
+            transition: opacity 0.5s;
+        }
+
+        .sacred-cup-container.shaking::before {
+            opacity: 1;
+            animation: rotateGlow 2s linear infinite;
+        }
+
+        @keyframes rotateGlow {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        .sacred-cup-hint {
+            font-size: 14px;
+            color: var(--neon-blue);
+            margin-bottom: 20px;
+            opacity: 0.8;
+        }
+
+        .sacred-cup-hint .hint-text {
+            animation: blink 1.5s ease-in-out infinite;
+        }
+
+        @keyframes blink {
+            0%, 100% { opacity: 0.6; }
+            50% { opacity: 1; }
+        }
+
+        .sacred-cup-hint.shaking-hint {
+            color: var(--primary-gold);
+            font-size: 18px;
+        }
+
+        .sacred-cup-hint.shaking-hint .hint-text::after {
+            content: '...';
+            animation: dots 1.5s steps(4, end) infinite;
+        }
+
+        @keyframes dots {
+            0%, 20% { content: ''; }
+            40% { content: '.'; }
+            60% { content: '..'; }
+            80%, 100% { content: '...'; }
+        }
+
+        /* 圣杯动画区域 */
+        .sacred-cup-animation {
+            height: 120px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 30px;
+            margin: 20px 0;
+            position: relative;
+        }
+
+        .cup {
+            font-size: 60px;
+            filter: drop-shadow(0 10px 20px rgba(0, 0, 0, 0.5));
+            transition: all 0.3s;
+            user-select: none;
+        }
+
+        .cup.left-cup {
+            transform: rotate(-15deg);
+        }
+
+        .cup.right-cup {
+            transform: rotate(15deg) scaleX(-1);
+        }
+
+        /* 摇晃动画 */
+        .sacred-cup-container.shaking .cup {
+            animation: shakeCup 0.15s ease-in-out infinite;
+        }
+
+        .sacred-cup-container.shaking .left-cup {
+            animation-name: shakeLeft;
+        }
+
+        .sacred-cup-container.shaking .right-cup {
+            animation-name: shakeRight;
+        }
+
+        @keyframes shakeLeft {
+            0%, 100% { transform: rotate(-15deg) translateX(0) translateY(0); }
+            25% { transform: rotate(-25deg) translateX(-10px) translateY(-15px); }
+            50% { transform: rotate(-5deg) translateX(5px) translateY(5px); }
+            75% { transform: rotate(-30deg) translateX(-5px) translateY(-10px); }
+        }
+
+        @keyframes shakeRight {
+            0%, 100% { transform: rotate(15deg) scaleX(-1) translateX(0) translateY(0); }
+            25% { transform: rotate(25deg) scaleX(-1) translateX(-10px) translateY(-15px); }
+            50% { transform: rotate(5deg) scaleX(-1) translateX(5px) translateY(5px); }
+            75% { transform: rotate(30deg) scaleX(-1) translateX(-5px) translateY(-10px); }
+        }
+
+        /* 掷出动画 */
+        .cup.throwing {
+            animation: throwCup 0.8s ease-out forwards !important;
+        }
+
+        @keyframes throwCup {
+            0% { 
+                transform: rotate(0deg) translateY(0) scale(1);
+                opacity: 1;
+            }
+            50% {
+                transform: rotate(720deg) translateY(-200px) scale(0.8);
+                opacity: 0.8;
+            }
+            100% { 
+                transform: rotate(1440deg) translateY(0) scale(1);
+                opacity: 1;
+            }
+        }
+
+        /* 圣杯结果 */
+        .sacred-cup-result {
+            margin-top: 20px;
+            font-size: 18px;
+            min-height: 30px;
+            opacity: 0;
+            transition: opacity 0.5s;
+        }
+
+        .sacred-cup-result.show {
+            opacity: 1;
+        }
+
+        .cup-result-sheng {
+            color: var(--primary-gold);
+            text-shadow: 0 0 20px rgba(255, 215, 0, 0.8);
+        }
+
+        .cup-result-xiao {
+            color: var(--neon-blue);
+        }
+
+        .cup-result-yin {
+            color: #666;
+        }
+
+        /* 掷圣杯按钮 */
+        .sacred-cup-btn {
+            width: 100%;
+            padding: 25px;
+            margin-top: 20px;
             background: linear-gradient(135deg, 
                 var(--primary-gold) 0%, 
                 #ff8c00 50%,
@@ -329,53 +495,62 @@
             border-radius: 15px;
             color: #1a0033;
             font-family: 'Noto Serif SC', serif;
-            font-size: 24px;
+            font-size: 22px;
             font-weight: 700;
             cursor: pointer;
             position: relative;
             overflow: hidden;
-            transition: all 0.3s;
+            transition: all 0.2s;
             letter-spacing: 4px;
-            animation: pulse 2s ease-in-out infinite;
+            user-select: none;
+            -webkit-user-select: none;
+            touch-action: none;
         }
 
-        @keyframes pulse {
-            0%, 100% { 
-                box-shadow: 
-                    0 0 20px rgba(255, 215, 0, 0.5),
-                    0 0 40px rgba(255, 215, 0, 0.3),
-                    0 0 60px rgba(255, 215, 0, 0.1);
-            }
-            50% { 
-                box-shadow: 
-                    0 0 40px rgba(255, 215, 0, 0.8),
-                    0 0 80px rgba(255, 215, 0, 0.5),
-                    0 0 120px rgba(255, 215, 0, 0.3);
-            }
-        }
-
-        .generate-btn:hover {
-            transform: translateY(-3px) scale(1.02);
-            animation: none;
+        .sacred-cup-btn:hover {
+            transform: translateY(-3px);
             box-shadow: 
-                0 0 60px rgba(255, 215, 0, 0.8),
-                0 0 100px rgba(255, 215, 0, 0.5);
+                0 0 40px rgba(255, 215, 0, 0.6),
+                0 0 80px rgba(255, 215, 0, 0.3);
         }
 
-        .generate-btn:active {
+        .sacred-cup-btn:active {
             transform: translateY(0) scale(0.98);
         }
 
-        .generate-btn::before {
-            content: '🙏';
-            margin-right: 15px;
-            font-size: 28px;
-            animation: pray 1s ease-in-out infinite;
+        .sacred-cup-btn.holding {
+            background: linear-gradient(135deg, 
+                #ff8c00 0%, 
+                #ff6b00 50%,
+                #ff8c00 100%);
+            box-shadow: 
+                0 0 60px rgba(255, 140, 0, 0.8),
+                inset 0 0 30px rgba(0, 0, 0, 0.2);
         }
 
-        @keyframes pray {
-            0%, 100% { transform: scale(1); }
-            50% { transform: scale(1.2); }
+        .sacred-cup-btn .btn-shine {
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: linear-gradient(
+                45deg,
+                transparent 40%,
+                rgba(255, 255, 255, 0.3) 50%,
+                transparent 60%
+            );
+            transform: translateX(-100%);
+            transition: transform 0s;
+        }
+
+        .sacred-cup-btn.holding .btn-shine {
+            animation: shine 1s linear infinite;
+        }
+
+        @keyframes shine {
+            from { transform: translateX(-100%); }
+            to { transform: translateX(100%); }
         }
 
         /* 结果面板 */
@@ -852,10 +1027,21 @@
                 <div class="calculate-result" id="calculateResult"></div>
             </div>
 
-            <!-- 生成按钮 -->
-            <button class="generate-btn" id="generateBtn">
-                请菩萨赐号
-            </button>
+            <!-- 掷圣杯交互区域 -->
+            <div class="sacred-cup-container" id="sacredCupContainer">
+                <div class="sacred-cup-hint" id="sacredCupHint">
+                    👆 <span class="hint-text">按住下方圣杯开始祈求</span>
+                </div>
+                <div class="sacred-cup-animation" id="sacredCupAnimation">
+                    <div class="cup left-cup" id="leftCup">🥥</div>
+                    <div class="cup right-cup" id="rightCup">🥥</div>
+                </div>
+                <button class="sacred-cup-btn" id="sacredCupBtn">
+                    <span class="btn-text">🙏 按住掷圣杯</span>
+                    <span class="btn-shine"></span>
+                </button>
+                <div class="sacred-cup-result" id="sacredCupResult"></div>
+            </div>
 
             <!-- 结果面板 -->
             <div class="result-panel" id="resultPanel">

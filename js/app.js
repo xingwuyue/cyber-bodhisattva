@@ -130,10 +130,8 @@ class CyberBodhisattva {
             this.calculateNotes();
         });
 
-        // 生成按钮
-        document.getElementById('generateBtn').addEventListener('click', () => {
-            this.generateNumbers();
-        });
+        // 掷圣杯交互
+        this.bindSacredCupEvents();
 
         // 复制按钮
         document.getElementById('copyBtn').addEventListener('click', () => {
@@ -156,6 +154,168 @@ class CyberBodhisattva {
             const toggle = document.getElementById('historyToggle');
             toggle.textContent = toggle.textContent === '▼' ? '▲' : '▼';
         });
+    }
+
+    // 掷圣杯事件绑定
+    bindSacredCupEvents() {
+        const btn = document.getElementById('sacredCupBtn');
+        const container = document.getElementById('sacredCupContainer');
+        const hint = document.getElementById('sacredCupHint');
+        
+        let isHolding = false;
+        let shakeInterval = null;
+        let holdStartTime = 0;
+        
+        const startShaking = (e) => {
+            e.preventDefault();
+            
+            const money = parseInt(document.getElementById('moneyInput').value) || 0;
+            if (money < 2) {
+                this.showToast('请至少供奉2元香油钱 🙏', 'warning');
+                return;
+            }
+            
+            isHolding = true;
+            holdStartTime = Date.now();
+            
+            btn.classList.add('holding');
+            container.classList.add('shaking');
+            hint.classList.add('shaking-hint');
+            hint.innerHTML = '👆 <span class="hint-text">正在请示菩萨</span>';
+            
+            // 播放摇晃音效（可选）
+            this.playShakeSound();
+        };
+        
+        const stopShaking = (e) => {
+            if (!isHolding) return;
+            e.preventDefault();
+            
+            isHolding = false;
+            const holdDuration = Date.now() - holdStartTime;
+            
+            btn.classList.remove('holding');
+            container.classList.remove('shaking');
+            hint.classList.remove('shaking-hint');
+            
+            // 显示掷出动画
+            this.throwSacredCups(holdDuration);
+        };
+        
+        // 鼠标事件
+        btn.addEventListener('mousedown', startShaking);
+        btn.addEventListener('mouseup', stopShaking);
+        btn.addEventListener('mouseleave', stopShaking);
+        
+        // 触摸事件（移动端）
+        btn.addEventListener('touchstart', startShaking, { passive: false });
+        btn.addEventListener('touchend', stopShaking, { passive: false });
+        
+        // 防止长按弹出菜单
+        btn.addEventListener('contextmenu', (e) => e.preventDefault());
+    }
+
+    // 播放摇晃音效（模拟）
+    playShakeSound() {
+        // 这里可以添加真实的音效，暂时用视觉反馈代替
+    }
+
+    // 掷圣杯动画
+    throwSacredCups(holdDuration) {
+        const leftCup = document.getElementById('leftCup');
+        const rightCup = document.getElementById('rightCup');
+        const resultDiv = document.getElementById('sacredCupResult');
+        const hint = document.getElementById('sacredCupHint');
+        
+        // 添加掷出动画
+        leftCup.classList.add('throwing');
+        rightCup.classList.add('throwing');
+        
+        // 隐藏提示
+        hint.style.opacity = '0';
+        
+        // 显示生成动画遮罩
+        this.showGeneratingAnimation();
+        
+        // 动画结束后显示结果
+        setTimeout(() => {
+            // 移除动画类
+            leftCup.classList.remove('throwing');
+            rightCup.classList.remove('throwing');
+            
+            // 随机圣杯结果
+            const results = this.generateCupResult();
+            this.displayCupResult(results);
+            
+            // 生成号码
+            const money = parseInt(document.getElementById('moneyInput').value) || 0;
+            const notes = Math.floor(money / 2);
+            
+            setTimeout(() => {
+                const allNumbers = [];
+                for (let i = 0; i < notes; i++) {
+                    const numbers = this.generateLotteryNumbers();
+                    numbers.index = i + 1;
+                    allNumbers.push(numbers);
+                }
+                this.displayMultiResults(allNumbers, notes);
+                this.hideGeneratingAnimation();
+                
+                // 恢复提示
+                hint.style.opacity = '1';
+                hint.innerHTML = '👆 <span class="hint-text">按住下方圣杯开始祈求</span>';
+            }, 1500);
+            
+        }, 800);
+    }
+
+    // 生成圣杯结果
+    generateCupResult() {
+        // 圣杯：一正一反（吉利）
+        // 笑杯：两正（需要再考虑）
+        // 阴杯：两反（不吉利）
+        const left = Math.random() > 0.5 ? '正' : '反';
+        const right = Math.random() > 0.5 ? '正' : '反';
+        
+        let result, meaning, className;
+        
+        if ((left === '正' && right === '反') || (left === '反' && right === '正')) {
+            result = '圣杯';
+            meaning = '神明同意，大吉大利！';
+            className = 'cup-result-sheng';
+        } else if (left === '正' && right === '正') {
+            result = '笑杯';
+            meaning = '神明含笑，再求更吉！';
+            className = 'cup-result-xiao';
+        } else {
+            result = '阴杯';
+            meaning = '时机未到，另择佳期！';
+            className = 'cup-result-yin';
+        }
+        
+        return { left, right, result, meaning, className };
+    }
+
+    // 显示圣杯结果
+    displayCupResult(results) {
+        const resultDiv = document.getElementById('sacredCupResult');
+        
+        resultDiv.innerHTML = `
+            <div class="${results.className}">
+                <div style="font-size: 40px; margin-bottom: 10px;">
+                    ${results.left === '正' ? '⚪' : '🔴'} ${results.right === '正' ? '⚪' : '🔴'}
+                </div>
+                <div style="font-size: 24px; font-weight: bold; margin-bottom: 5px;">${results.result}</div>
+                <div style="font-size: 14px; opacity: 0.8;">${results.meaning}</div>
+            </div>
+        `;
+        
+        resultDiv.classList.add('show');
+        
+        // 3秒后隐藏结果
+        setTimeout(() => {
+            resultDiv.classList.remove('show');
+        }, 3000);
     }
 
     // 计算注数
