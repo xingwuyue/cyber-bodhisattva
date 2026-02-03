@@ -271,6 +271,47 @@ class CyberBodhisattva {
         }, 1000);
     }
 
+    // 创建撞击效果
+    createImpactEffect(container, side) {
+        // 撞击波纹
+        const wave = document.createElement('div');
+        wave.className = 'impact-wave';
+        wave.style.left = side === 'left' ? '35%' : '65%';
+        wave.style.top = '70%';
+        container.appendChild(wave);
+        wave.classList.add('active');
+        
+        // 地面裂纹
+        const crack = document.createElement('div');
+        crack.className = 'ground-crack';
+        crack.style.left = side === 'left' ? '35%' : '65%';
+        container.appendChild(crack);
+        crack.classList.add('active');
+        
+        // 清理
+        setTimeout(() => {
+            wave.remove();
+            crack.remove();
+        }, 600);
+    }
+
+    // 创建尘埃粒子
+    createDustParticles(container) {
+        for (let i = 0; i < 12; i++) {
+            const dust = document.createElement('div');
+            dust.className = 'dust-particle';
+            dust.style.left = '50%';
+            dust.style.top = '70%';
+            dust.style.setProperty('--tx', `${(Math.random() - 0.5) * 200}px`);
+            dust.style.setProperty('--ty', `${-Math.random() * 100 - 50}px`);
+            dust.style.animation = `dustFly 0.6s ease-out forwards`;
+            dust.style.animationDelay = `${i * 0.03}s`;
+            container.appendChild(dust);
+            
+            setTimeout(() => dust.remove(), 600);
+        }
+    }
+
     // 播放摇晃音效（模拟）
     playShakeSound() {
         // 这里可以添加真实的音效，暂时用视觉反馈代替
@@ -301,12 +342,23 @@ class CyberBodhisattva {
             shockRing.classList.add('active');
         }, 50);
         
-        // 屏幕震动效果（如果蓄力够强）
-        if (intensity > 0.7) {
-            document.body.style.animation = 'screenShake 0.3s ease-out';
+        // 屏幕大震动效果（松开的瞬间）
+        document.body.classList.add('screen-shaking');
+        setTimeout(() => {
+            document.body.classList.remove('screen-shaking');
+        }, 500);
+        
+        // 创建多个冲击波
+        for (let i = 0; i < 3; i++) {
             setTimeout(() => {
-                document.body.style.animation = '';
-            }, 300);
+                const shock = document.createElement('div');
+                shock.className = 'shock-ring';
+                shock.style.borderWidth = `${5 + i * 3}px`;
+                shock.style.animationDelay = `${i * 0.1}s`;
+                container.appendChild(shock);
+                shock.classList.add('active');
+                setTimeout(() => shock.remove(), 700);
+            }, i * 100);
         }
         
         // 添加掷出动画 - 根据蓄力程度调整速度
@@ -324,16 +376,34 @@ class CyberBodhisattva {
         
         // 第一阶段：掷出
         setTimeout(() => {
-            // 落地效果（根据蓄力程度调整弹跳）
+            // 强力撞击地面效果
             leftCup.classList.remove('throwing-left');
             rightCup.classList.remove('throwing-right');
-            leftCup.classList.add('landed');
-            rightCup.classList.add('landed');
             
-            // 调整落地动画时长
-            const bounceDuration = 0.4 - (intensity * 0.15);
-            leftCup.style.animationDuration = `${bounceDuration}s`;
-            rightCup.style.animationDuration = `${bounceDuration}s`;
+            // 创建撞击效果
+            this.createImpactEffect(container, 'left');
+            setTimeout(() => this.createImpactEffect(container, 'right'), 100);
+            
+            // 尘埃粒子
+            this.createDustParticles(container);
+            
+            // 圣杯落地动画 - 直接设置最终状态
+            leftCup.style.animation = 'none';
+            rightCup.style.animation = 'none';
+            
+            // 强制重绘
+            void leftCup.offsetWidth;
+            void rightCup.offsetWidth;
+            
+            // 应用撞击动画
+            leftCup.style.animation = `hardLand 0.4s ease-out forwards`;
+            rightCup.style.animation = `hardLandRight 0.4s ease-out 0.1s forwards`;
+            
+            // 落地后弹跳
+            setTimeout(() => {
+                leftCup.style.animation = `bounceAfterLand 0.5s ease-out`;
+                rightCup.style.animation = `bounceAfterLandRight 0.5s ease-out 0.1s`;
+            }, 400);
             
             // 移除冲击环
             shockRing.remove();
