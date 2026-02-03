@@ -409,7 +409,7 @@
             transform: rotate(15deg) scaleX(-1);
         }
 
-        /* 摇晃动画 */
+        /* 摇晃动画 - 带蓄力感 */
         .sacred-cup-container.shaking .cup {
             animation: shakeCup 0.15s ease-in-out infinite;
         }
@@ -420,6 +420,19 @@
 
         .sacred-cup-container.shaking .right-cup {
             animation-name: shakeRight;
+        }
+
+        /* 蓄力加强版摇晃 */
+        .sacred-cup-container.shaking.power-1 .cup {
+            animation-duration: 0.12s;
+        }
+
+        .sacred-cup-container.shaking.power-2 .cup {
+            animation-duration: 0.08s;
+        }
+
+        .sacred-cup-container.shaking.power-3 .cup {
+            animation-duration: 0.05s;
         }
 
         @keyframes shakeLeft {
@@ -436,24 +449,179 @@
             75% { transform: rotate(30deg) scaleX(-1) translateX(-5px) translateY(-10px); }
         }
 
-        /* 掷出动画 */
-        .cup.throwing {
-            animation: throwCup 0.8s ease-out forwards !important;
+        /* 蓄力进度条 */
+        .power-meter {
+            width: 100%;
+            height: 6px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 3px;
+            margin: 15px 0;
+            overflow: hidden;
+            opacity: 0;
+            transition: opacity 0.3s;
         }
 
-        @keyframes throwCup {
-            0% { 
-                transform: rotate(0deg) translateY(0) scale(1);
+        .sacred-cup-container.shaking .power-meter {
+            opacity: 1;
+        }
+
+        .power-fill {
+            height: 100%;
+            width: 0%;
+            background: linear-gradient(90deg, #ffd700, #ff6b00, #ff006e);
+            border-radius: 3px;
+            transition: width 0.1s linear;
+            box-shadow: 0 0 10px rgba(255, 215, 0, 0.5);
+        }
+
+        /* 蓄力粒子效果 */
+        .charge-particles {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            overflow: hidden;
+        }
+
+        .charge-particle {
+            position: absolute;
+            width: 4px;
+            height: 4px;
+            background: var(--primary-gold);
+            border-radius: 50%;
+            opacity: 0;
+        }
+
+        .sacred-cup-container.shaking .charge-particle {
+            animation: chargeUp 0.8s ease-out forwards;
+        }
+
+        @keyframes chargeUp {
+            0% {
                 opacity: 1;
+                transform: translateY(100px) scale(1);
             }
-            50% {
-                transform: rotate(720deg) translateY(-200px) scale(0.8);
-                opacity: 0.8;
+            100% {
+                opacity: 0;
+                transform: translateY(-50px) scale(0);
+            }
+        }
+
+        /* 掷出动画 - 爆发力版本 */
+        .cup.throwing-left {
+            animation: throwLeft 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards !important;
+        }
+
+        .cup.throwing-right {
+            animation: throwRight 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards !important;
+        }
+
+        @keyframes throwLeft {
+            0% { 
+                transform: rotate(-15deg) translateX(0) translateY(0) scale(1);
+                filter: drop-shadow(0 10px 20px rgba(0, 0, 0, 0.5));
+            }
+            30% {
+                transform: rotate(-45deg) translateX(-80px) translateY(-150px) scale(1.2);
+                filter: drop-shadow(0 50px 50px rgba(255, 215, 0, 0.3));
+            }
+            60% {
+                transform: rotate(360deg) translateX(30px) translateY(-50px) scale(1.1);
             }
             100% { 
-                transform: rotate(1440deg) translateY(0) scale(1);
-                opacity: 1;
+                transform: rotate(720deg) translateX(0) translateY(0) scale(1);
+                filter: drop-shadow(0 10px 20px rgba(0, 0, 0, 0.5));
             }
+        }
+
+        @keyframes throwRight {
+            0% { 
+                transform: rotate(15deg) scaleX(-1) translateX(0) translateY(0) scale(1);
+                filter: drop-shadow(0 10px 20px rgba(0, 0, 0, 0.5));
+            }
+            30% {
+                transform: rotate(45deg) scaleX(-1) translateX(-80px) translateY(-150px) scale(1.2);
+                filter: drop-shadow(0 50px 50px rgba(255, 215, 0, 0.3));
+            }
+            60% {
+                transform: rotate(-360deg) scaleX(-1) translateX(30px) translateY(-50px) scale(1.1);
+            }
+            100% { 
+                transform: rotate(-720deg) scaleX(-1) translateX(0) translateY(0) scale(1);
+                filter: drop-shadow(0 10px 20px rgba(0, 0, 0, 0.5));
+            }
+        }
+
+        /* 松开时的冲击波效果 */
+        .sacred-cup-container.releasing {
+            animation: releasePulse 0.3s ease-out;
+        }
+
+        @keyframes releasePulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.02); }
+            100% { transform: scale(1); }
+        }
+
+        /* 落地弹跳效果 */
+        .cup.landed {
+            animation: landBounce 0.4s ease-out;
+        }
+
+        @keyframes landBounce {
+            0% { transform: translateY(0) scale(1); }
+            40% { transform: translateY(-20px) scale(1.1); }
+            70% { transform: translateY(5px) scale(0.95); }
+            100% { transform: translateY(0) scale(1); }
+        }
+
+        /* 冲击光环 */
+        .shock-ring {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 0;
+            height: 0;
+            border: 3px solid var(--primary-gold);
+            border-radius: 50%;
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        .shock-ring.active {
+            animation: shockWave 0.6s ease-out forwards;
+        }
+
+        @keyframes shockWave {
+            0% {
+                width: 50px;
+                height: 50px;
+                opacity: 1;
+                border-width: 5px;
+            }
+            100% {
+                width: 400px;
+                height: 400px;
+                opacity: 0;
+                border-width: 0;
+            }
+        }
+
+        /* 屏幕震动 */
+        @keyframes screenShake {
+            0%, 100% { transform: translateX(0); }
+            10% { transform: translateX(-5px) translateY(-3px); }
+            20% { transform: translateX(5px) translateY(3px); }
+            30% { transform: translateX(-8px) translateY(-5px); }
+            40% { transform: translateX(8px) translateY(5px); }
+            50% { transform: translateX(-5px) translateY(-3px); }
+            60% { transform: translateX(5px) translateY(3px); }
+            70% { transform: translateX(-3px) translateY(-2px); }
+            80% { transform: translateX(3px) translateY(2px); }
+            90% { transform: translateX(-2px) translateY(-1px); }
         }
 
         /* 圣杯结果 */
@@ -1030,14 +1198,18 @@
             <!-- 掷圣杯交互区域 -->
             <div class="sacred-cup-container" id="sacredCupContainer">
                 <div class="sacred-cup-hint" id="sacredCupHint">
-                    👆 <span class="hint-text">按住下方圣杯开始祈求</span>
+                    👆 <span class="hint-text">按住下方圣杯蓄力，松开示结果</span>
+                </div>
+                <div class="power-meter" id="powerMeter">
+                    <div class="power-fill" id="powerFill"></div>
                 </div>
                 <div class="sacred-cup-animation" id="sacredCupAnimation">
+                    <div class="charge-particles" id="chargeParticles"></div>
                     <div class="cup left-cup" id="leftCup">🥥</div>
                     <div class="cup right-cup" id="rightCup">🥥</div>
                 </div>
                 <button class="sacred-cup-btn" id="sacredCupBtn">
-                    <span class="btn-text">🙏 按住掷圣杯</span>
+                    <span class="btn-text">🙏 按住蓄力 · 松开示杯</span>
                     <span class="btn-shine"></span>
                 </button>
                 <div class="sacred-cup-result" id="sacredCupResult"></div>

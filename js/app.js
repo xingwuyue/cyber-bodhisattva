@@ -156,15 +156,19 @@ class CyberBodhisattva {
         });
     }
 
-    // 掷圣杯事件绑定
+    // 掷圣杯事件绑定 - 蓄力版
     bindSacredCupEvents() {
         const btn = document.getElementById('sacredCupBtn');
         const container = document.getElementById('sacredCupContainer');
         const hint = document.getElementById('sacredCupHint');
+        const powerFill = document.getElementById('powerFill');
+        const chargeParticles = document.getElementById('chargeParticles');
         
         let isHolding = false;
-        let shakeInterval = null;
         let holdStartTime = 0;
+        let powerInterval = null;
+        let particleInterval = null;
+        let currentPower = 0;
         
         const startShaking = (e) => {
             e.preventDefault();
@@ -177,14 +181,41 @@ class CyberBodhisattva {
             
             isHolding = true;
             holdStartTime = Date.now();
+            currentPower = 0;
             
             btn.classList.add('holding');
             container.classList.add('shaking');
             hint.classList.add('shaking-hint');
-            hint.innerHTML = '👆 <span class="hint-text">正在请示菩萨</span>';
+            hint.innerHTML = '💪 <span class="hint-text">蓄力中...</span>';
             
-            // 播放摇晃音效（可选）
-            this.playShakeSound();
+            // 蓄力进度条动画
+            powerInterval = setInterval(() => {
+                const elapsed = Date.now() - holdStartTime;
+                currentPower = Math.min(elapsed / 2000, 1); // 2秒满蓄力
+                powerFill.style.width = `${currentPower * 100}%`;
+                
+                // 更新提示文字
+                if (currentPower < 0.3) {
+                    hint.innerHTML = '💪 <span class="hint-text">蓄力中...</span>';
+                    container.classList.remove('power-1', 'power-2', 'power-3');
+                } else if (currentPower < 0.6) {
+                    hint.innerHTML = '🔥 <span class="hint-text">蓄力加强！</span>';
+                    container.classList.add('power-1');
+                } else if (currentPower < 0.9) {
+                    hint.innerHTML = '⚡ <span class="hint-text">全力蓄力！</span>';
+                    container.classList.remove('power-1');
+                    container.classList.add('power-2');
+                } else {
+                    hint.innerHTML = '💥 <span class="hint-text">MAX！可以释放了！</span>';
+                    container.classList.remove('power-2');
+                    container.classList.add('power-3');
+                }
+            }, 50);
+            
+            // 生成蓄力粒子
+            particleInterval = setInterval(() => {
+                this.createChargeParticle(chargeParticles);
+            }, 100);
         };
         
         const stopShaking = (e) => {
@@ -194,12 +225,22 @@ class CyberBodhisattva {
             isHolding = false;
             const holdDuration = Date.now() - holdStartTime;
             
+            // 清除动画
+            clearInterval(powerInterval);
+            clearInterval(particleInterval);
+            
             btn.classList.remove('holding');
-            container.classList.remove('shaking');
+            container.classList.remove('shaking', 'power-1', 'power-2', 'power-3');
             hint.classList.remove('shaking-hint');
             
-            // 显示掷出动画
-            this.throwSacredCups(holdDuration);
+            // 重置进度条
+            powerFill.style.width = '0%';
+            
+            // 清空粒子
+            chargeParticles.innerHTML = '';
+            
+            // 显示掷出动画（传入蓄力程度）
+            this.throwSacredCups(holdDuration, currentPower);
         };
         
         // 鼠标事件
@@ -215,58 +256,142 @@ class CyberBodhisattva {
         btn.addEventListener('contextmenu', (e) => e.preventDefault());
     }
 
+    // 创建蓄力粒子
+    createChargeParticle(container) {
+        const particle = document.createElement('div');
+        particle.className = 'charge-particle';
+        particle.style.left = `${Math.random() * 100}%`;
+        particle.style.top = '100%';
+        particle.style.animationDelay = `${Math.random() * 0.3}s`;
+        container.appendChild(particle);
+        
+        // 动画结束后移除
+        setTimeout(() => {
+            particle.remove();
+        }, 1000);
+    }
+
     // 播放摇晃音效（模拟）
     playShakeSound() {
         // 这里可以添加真实的音效，暂时用视觉反馈代替
     }
 
-    // 掷圣杯动画
-    throwSacredCups(holdDuration) {
+    // 掷圣杯动画 - 爆发释放版（带蓄力加成）
+    throwSacredCups(holdDuration, powerLevel) {
+        const container = document.getElementById('sacredCupContainer');
         const leftCup = document.getElementById('leftCup');
         const rightCup = document.getElementById('rightCup');
         const resultDiv = document.getElementById('sacredCupResult');
         const hint = document.getElementById('sacredCupHint');
         
-        // 添加掷出动画
-        leftCup.classList.add('throwing');
-        rightCup.classList.add('throwing');
+        // 根据蓄力程度调整爆发效果
+        const intensity = Math.max(powerLevel, 0.3); // 最小30%强度
         
-        // 隐藏提示
-        hint.style.opacity = '0';
+        // 释放冲击感
+        container.classList.add('releasing');
         
-        // 显示生成动画遮罩
-        this.showGeneratingAnimation();
+        // 创建冲击光环（根据蓄力程度调整大小）
+        const shockRing = document.createElement('div');
+        shockRing.className = 'shock-ring';
+        shockRing.style.borderWidth = `${3 + intensity * 5}px`;
+        container.appendChild(shockRing);
         
-        // 动画结束后显示结果
+        // 延迟一点点让冲击感更强
         setTimeout(() => {
-            // 移除动画类
-            leftCup.classList.remove('throwing');
-            rightCup.classList.remove('throwing');
+            shockRing.classList.add('active');
+        }, 50);
+        
+        // 屏幕震动效果（如果蓄力够强）
+        if (intensity > 0.7) {
+            document.body.style.animation = 'screenShake 0.3s ease-out';
+            setTimeout(() => {
+                document.body.style.animation = '';
+            }, 300);
+        }
+        
+        // 添加掷出动画 - 根据蓄力程度调整速度
+        const throwDuration = 0.6 - (intensity * 0.2); // 蓄力越高越快
+        leftCup.style.animationDuration = `${throwDuration}s`;
+        rightCup.style.animationDuration = `${throwDuration}s`;
+        leftCup.classList.add('throwing-left');
+        rightCup.classList.add('throwing-right');
+        
+        // 更新提示为释放感
+        const releaseTexts = ['掷！', '喝！', '哈！', '破！'];
+        const releaseText = releaseTexts[Math.floor(intensity * (releaseTexts.length - 1))];
+        hint.innerHTML = `💨 <span style="font-size: 28px; color: #ffd700; font-weight: bold; text-shadow: 0 0 20px rgba(255,215,0,0.8);">${releaseText}</span>`;
+        hint.style.opacity = '1';
+        
+        // 第一阶段：掷出
+        setTimeout(() => {
+            // 落地效果（根据蓄力程度调整弹跳）
+            leftCup.classList.remove('throwing-left');
+            rightCup.classList.remove('throwing-right');
+            leftCup.classList.add('landed');
+            rightCup.classList.add('landed');
             
-            // 随机圣杯结果
+            // 调整落地动画时长
+            const bounceDuration = 0.4 - (intensity * 0.15);
+            leftCup.style.animationDuration = `${bounceDuration}s`;
+            rightCup.style.animationDuration = `${bounceDuration}s`;
+            
+            // 移除冲击环
+            shockRing.remove();
+            container.classList.remove('releasing');
+            
+            // 显示圣杯结果
             const results = this.generateCupResult();
+            
+            // 蓄力影响结果（满蓄力更容易出圣杯）
+            if (intensity > 0.8 && results.result !== '圣杯') {
+                // 80%蓄力以上，如果不是圣杯，有30%概率重置为圣杯
+                if (Math.random() > 0.7) {
+                    results.result = '圣杯';
+                    results.meaning = '神明感动，特赐圣杯！';
+                    results.className = 'cup-result-sheng';
+                }
+            }
+            
             this.displayCupResult(results);
             
-            // 生成号码
-            const money = parseInt(document.getElementById('moneyInput').value) || 0;
-            const notes = Math.floor(money / 2);
+            // 更新提示
+            hint.innerHTML = `<span style="color: var(--primary-gold); font-size: 18px;">${results.result}！${results.meaning}</span>`;
             
+            // 第二阶段：请示菩萨
             setTimeout(() => {
-                const allNumbers = [];
-                for (let i = 0; i < notes; i++) {
-                    const numbers = this.generateLotteryNumbers();
-                    numbers.index = i + 1;
-                    allNumbers.push(numbers);
-                }
-                this.displayMultiResults(allNumbers, notes);
-                this.hideGeneratingAnimation();
+                hint.innerHTML = '👆 <span style="color: var(--neon-blue);">正在请示菩萨...</span>';
                 
-                // 恢复提示
-                hint.style.opacity = '1';
-                hint.innerHTML = '👆 <span class="hint-text">按住下方圣杯开始祈求</span>';
-            }, 1500);
+                // 显示生成动画遮罩
+                this.showGeneratingAnimation();
+                
+                // 移除落地动画类
+                leftCup.classList.remove('landed');
+                rightCup.classList.remove('landed');
+                
+                // 第三阶段：生成号码
+                setTimeout(() => {
+                    const money = parseInt(document.getElementById('moneyInput').value) || 0;
+                    const notes = Math.floor(money / 2);
+                    
+                    const allNumbers = [];
+                    for (let i = 0; i < notes; i++) {
+                        const numbers = this.generateLotteryNumbers();
+                        numbers.index = i + 1;
+                        allNumbers.push(numbers);
+                    }
+                    this.displayMultiResults(allNumbers, notes);
+                    this.hideGeneratingAnimation();
+                    
+                    // 恢复初始提示
+                    setTimeout(() => {
+                        hint.innerHTML = '👆 <span class="hint-text">按住下方圣杯蓄力，松开示结果</span>';
+                    }, 2000);
+                    
+                }, 1500);
+                
+            }, 1000);
             
-        }, 800);
+        }, throwDuration * 1000);
     }
 
     // 生成圣杯结果
